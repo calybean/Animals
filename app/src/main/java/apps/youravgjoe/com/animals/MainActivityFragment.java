@@ -7,7 +7,6 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -65,19 +64,17 @@ public class MainActivityFragment extends Fragment {
 
         // seed the database
         if (mDb.getRowCount() == 0) {
-            Log.d(TAG, "mDb.getRowCount() == 0");
             // initialize this with the yesId pointing to frog and the noId pointing to moose
             mDb.addRow(new Node(0, "Does it live in the water?", null, 1, 2));
             mDb.addRow(new Node(1, String.format(getResources().getString(R.string.guess_animal), A, "frog"), "frog"));
             mDb.addRow(new Node(2, String.format(getResources().getString(R.string.guess_animal), A, "moose"), "moose"));
         }
 
-        Log.d(TAG, "frog node .getAnimal: " + mDb.getRow(1).getAnimal());
-
         // setup views and click listeners
         setupViews(rootView);
         setupOnClickListeners();
 
+        // start at the top of the tree
         mCurrentNode = mDb.getRow(0);
 
         return rootView;
@@ -150,7 +147,6 @@ public class MainActivityFragment extends Fragment {
                     // enable edit text
                     mNewAnimalEditText.setEnabled(true);
                     mNewAnimalEditText.requestFocus();
-                    // todo: open keyboard?
                     InputMethodManager imm = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
                     imm.toggleSoftInput(InputMethodManager.SHOW_FORCED,0);
                 } else {
@@ -164,16 +160,7 @@ public class MainActivityFragment extends Fragment {
             @Override
             public void onClick(View view) {
                 if (!mNewAnimalEditText.getText().toString().trim().equals("")) {
-                    // I'm sure there's a better solution than this. This is a little hokey.
-                    // split up the last question, and grab the last word (which should be the animal we just asked about)
-//                    String[] parts = mCurrentNode.getQuestion().split("\\s+");
-//                    String lastAnimal = parts[parts.length - 1];
-//                    lastAnimal = lastAnimal.substring(0, lastAnimal.length() - 1); // todo: WILL IT OUT OF BOUNDS???
-
                     String lastAnimal = mCurrentNode.getAnimal();
-
-                    Log.d(TAG, "lastAnimal: " + lastAnimal);
-                    Log.d(TAG, "newAnimal: " + mNewAnimalEditText.getText().toString());
 
                     // hide new animal layout, disable edit text
                     mNewAnimalLayout.setVisibility(View.GONE);
@@ -204,7 +191,6 @@ public class MainActivityFragment extends Fragment {
                     mNewQuestionEditText.requestFocus();
                     InputMethodManager imm = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
                     imm.toggleSoftInput(InputMethodManager.SHOW_FORCED,0);
-                    // todo: show keyboard?
                 }
             }
         });
@@ -273,8 +259,6 @@ public class MainActivityFragment extends Fragment {
                 mDb.addRow(yesNode);
                 mDb.addRow(noNode);
                 mDb.updateRow(mCurrentNode);
-
-                Log.d(TAG, mNewQuestionEditText.getText().toString().trim());
 
                 // hide yes/no question layout
                 mQuestionYesNoLayout.setVisibility(View.GONE);
@@ -395,8 +379,6 @@ public class MainActivityFragment extends Fragment {
             SQLiteDatabase db = this.getWritableDatabase();
             ContentValues values = new ContentValues();
 
-            Log.d(TAG, node.toString());
-
             values.put(KEY_ID, node.getId());
             values.put(KEY_QUESTION, node.getQuestion());
             values.put(KEY_ANIMAL, node.getAnimal());
@@ -417,9 +399,7 @@ public class MainActivityFragment extends Fragment {
                 cursor.moveToFirst();
             }
 
-            // create a new node with all the data, or null if it's empty
-            // todo: will this explode if the Node doesn't have yes/no ids? (should I start out every node with a -1 yes/no id?)
-
+            // create a new node with all the data
             Node  node = new Node (
                     cursor.getInt(cursor.getColumnIndex(KEY_ID)),
                     cursor.getString(cursor.getColumnIndex(KEY_QUESTION)),
